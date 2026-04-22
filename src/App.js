@@ -7,18 +7,15 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Plus, 
-  ChevronLeft, 
-  ChevronRight, 
   Check, 
   Trash2, 
   Flame, 
   Trophy, 
   Target,
-  Calendar as CalendarIcon,
   X,
   PlusCircle
 } from 'lucide-react';
-import { Habit, Category, CATEGORIES, HABIT_COLORS } from './types';
+import { CATEGORIES, HABIT_COLORS } from './constants';
 
 // Utils
 const getStorageKey = () => 'habitflow_data';
@@ -33,28 +30,23 @@ const getDatesForLastWeek = () => {
   return dates;
 };
 
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
-};
-
-const getDayName = (dateStr: string) => {
+const getDayName = (dateStr) => {
   const date = new Date(dateStr);
   return date.toLocaleDateString('en-US', { weekday: 'narrow' });
 };
 
-const getDayNumber = (dateStr: string) => {
+const getDayNumber = (dateStr) => {
   const date = new Date(dateStr);
   return date.getDate();
 };
 
 export default function App() {
-  const [habits, setHabits] = useState<Habit[]>([]);
+  const [habits, setHabits] = useState([]);
   const [isAddingHabit, setIsAddingHabit] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
-  const [newHabitCategory, setNewHabitCategory] = useState<Category>('Health');
+  const [newHabitCategory, setNewHabitCategory] = useState('Health');
   const [newHabitColor, setNewHabitColor] = useState(HABIT_COLORS[0]);
-  const [activeTab, setActiveTab] = useState<'daily' | 'stats'>('daily');
+  const [activeTab, setActiveTab] = useState('daily');
 
   const lastWeek = useMemo(() => getDatesForLastWeek(), []);
   const today = lastWeek[lastWeek.length - 1];
@@ -84,7 +76,7 @@ export default function App() {
       ? crypto.randomUUID() 
       : Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-    const newHabit: Habit = {
+    const newHabit = {
       id: uuid,
       name: newHabitName.trim(),
       category: newHabitCategory,
@@ -98,7 +90,7 @@ export default function App() {
     setIsAddingHabit(false);
   };
 
-  const toggleHabit = (habitId: string, date: string) => {
+  const toggleHabit = (habitId, date) => {
     setHabits(prev => prev.map(h => {
       if (h.id !== habitId) return h;
       
@@ -111,20 +103,19 @@ export default function App() {
     }));
   };
 
-  const deleteHabit = (id: string) => {
+  const deleteHabit = (id) => {
     if (confirm('Are you sure you want to delete this habit?')) {
       setHabits(habits.filter(h => h.id !== id));
     }
   };
 
-  const calculateStreak = (completedDates: string[]) => {
-    if (completedDates.length === 0) return 0;
+  const calculateStreak = (completedDates) => {
+    if (!completedDates || completedDates.length === 0) return 0;
     
     const sorted = [...completedDates].sort((a, b) => b.localeCompare(a));
     let streak = 0;
     const checkDate = new Date();
     
-    // Check if the streak is still active (today or yesterday)
     const todayStr = checkDate.toISOString().split('T')[0];
     checkDate.setDate(checkDate.getDate() - 1);
     const yesterdayStr = checkDate.toISOString().split('T')[0];
@@ -150,7 +141,7 @@ export default function App() {
 
   const totalCompletions = habits.reduce((acc, h) => acc + h.completedDates.length, 0);
   const averageConsistency = habits.length 
-    ? Math.round((totalCompletions / (habits.length * 30)) * 100) // Rough 30 day avg
+    ? Math.round((totalCompletions / (habits.length * 30)) * 100) 
     : 0;
 
   return (
@@ -169,7 +160,6 @@ export default function App() {
               className="p-2 hover:bg-white rounded-full transition-colors text-gray-300 hover:text-[#1A1A1A]"
               title="View on GitHub"
             >
-              {/* Note: In a real app this would be the actual repo link */}
               <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
             </a>
           </div>
@@ -213,7 +203,7 @@ export default function App() {
                     <span className="text-[10px] uppercase tracking-wider font-bold">Best Streak</span>
                   </div>
                   <p className="text-3xl font-display font-black text-[#1A1A1A]">
-                    {Math.max(0, ...habits.map(h => calculateStreak(h.completedDates)))}
+                    {habits.length > 0 ? Math.max(0, ...habits.map(h => calculateStreak(h.completedDates || []))) : 0}
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
@@ -285,7 +275,7 @@ export default function App() {
                                 <h3 className="font-bold text-[#1A1A1A] text-lg">{habit.name}</h3>
                                 <div className="flex items-center gap-1 bg-orange-50 text-orange-600 px-2 py-0.5 rounded-md text-[10px] font-black uppercase">
                                   <Flame size={12} fill="currentColor" />
-                                  {calculateStreak(habit.completedDates)}
+                                  {calculateStreak(habit.completedDates || [])}
                                 </div>
                               </div>
                               <p className="text-[10px] text-[#8E8E8E] font-bold uppercase tracking-widest">
@@ -295,7 +285,7 @@ export default function App() {
 
                             <div className="flex items-center gap-2">
                               {lastWeek.map((date) => {
-                                const isCompleted = habit.completedDates.includes(date);
+                                const isCompleted = (habit.completedDates || []).includes(date);
                                 const isToday = date === today;
                                 return (
                                   <div key={date} className="flex flex-col items-center gap-2">
@@ -364,7 +354,7 @@ export default function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {habits.map(habit => {
-                  const score = Math.round((habit.completedDates.length / 30) * 100);
+                  const score = Math.round(((habit.completedDates || []).length / 30) * 100);
                   return (
                     <div key={habit.id} className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
                       <div className="flex justify-between items-start mb-6">
