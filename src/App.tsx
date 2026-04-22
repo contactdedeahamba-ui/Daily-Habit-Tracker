@@ -79,8 +79,13 @@ export default function App() {
   const addHabit = () => {
     if (!newHabitName.trim()) return;
 
+    // Fallback for crypto.randomUUID in non-secure contexts
+    const uuid = typeof crypto.randomUUID === 'function' 
+      ? crypto.randomUUID() 
+      : Math.random().toString(36).substring(2) + Date.now().toString(36);
+
     const newHabit: Habit = {
-      id: crypto.randomUUID(),
+      id: uuid,
       name: newHabitName.trim(),
       category: newHabitCategory,
       color: newHabitColor,
@@ -153,9 +158,21 @@ export default function App() {
       {/* Header */}
       <header className="px-6 pt-12 pb-8 max-w-4xl mx-auto flex justify-between items-end">
         <div>
-          <h1 className="font-display text-7xl md:text-8xl tracking-tighter text-[#1A1A1A] leading-none">
-            Flow
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-7xl md:text-8xl tracking-tighter text-[#1A1A1A] leading-none">
+              Flow
+            </h1>
+            <a 
+              href="https://github.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="p-2 hover:bg-white rounded-full transition-colors text-gray-300 hover:text-[#1A1A1A]"
+              title="View on GitHub"
+            >
+              {/* Note: In a real app this would be the actual repo link */}
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+            </a>
+          </div>
           <p className="text-[#8E8E8E] font-medium mt-4 uppercase tracking-widest text-xs">
             {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </p>
